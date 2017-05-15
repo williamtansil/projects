@@ -185,7 +185,7 @@ class CI_Unit_test {
 	/**
 	 * Generate a report
 	 *
-	 * Displays a table with the test data
+	 * Displays a table with the projects data
 	 *
 	 * @param	array	 $result
 	 * @return	string

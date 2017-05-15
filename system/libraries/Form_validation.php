@@ -784,7 +784,7 @@ class CI_Form_validation {
 				}
 			}
 
-			// Did the rule test negatively? If so, grab the error.
+			// Did the rule projects negatively? If so, grab the error.
 			if ($result === FALSE)
 			{
 				// Callable rules might not have named error messages

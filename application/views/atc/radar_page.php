@@ -32,7 +32,6 @@
     </div>
 </div>
 <div class="command-bar">
-    <button id="move">move</button>
     test
 </div>
 </body>
