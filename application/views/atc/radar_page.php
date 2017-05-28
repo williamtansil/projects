@@ -37,14 +37,39 @@
 </body>
 </html>
 <script>
-    var interval = 1000;
-    function move() {
-        var plane = $(".plane");
-        var position = plane.position();
+    $(document).ready(function(){
+        interval = 1000;
+        plane = $(".plane");
+        getdata();
+    });
+    function move(plane) {
         //alert(position.left);
-        $(".plane").css({ left : position.left + 10});
+        //get data
+        var div = plane;
+        $.ajax({
+            type:"POST",
+            url: "http://localhost/projects/index.php/atc/get_plane_data",
+            datatype: "json",
+            success:function(res){
+                console.log(res);
+            },
+            error:function(){
+                console.log("error");
+            }
+        });
+        //calculate data
+        var spd_x = 2;  
+        var spd_y = 2;
+        var position = plane.position();
+        var pos_x = position.left;
+        var pos_y = position.top;
+
+        plane.css({ left : pos_x + spd_x});
+        plane.css({ top : pos_y + spd_y});
     }
-    window.setInterval(function(){
-        move();
-    }, interval);
+    function getdata() {
+        setTimeout(function(){
+            move(plane);
+        }, interval);
+    }
 </script>

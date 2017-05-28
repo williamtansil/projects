@@ -17,4 +17,7 @@ class ATC extends CI_Controller {
         //$this->load->view("atc/create_simulation_form");
         $this->load->view("atc/radar_page");
     }
+    public function get_plane_data() {
+        $plane = $this->atc_m->f_plane_data();
+    }
 }

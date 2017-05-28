@@ -10,5 +10,7 @@ class ATC_m extends CI_Model {
     {
         parent::__construct();
     }
-
+    function f_plane_data() {
+    	return $this->db->get("plane")->result_array();
+    }
 }
