@@ -10,14 +10,30 @@ class ATC extends CI_Controller {
     {
         parent::__construct();
     }
+
     public function index() {
         $this->load->view("atc/homepage");
     }
+
     public function start_simulation() {
         //$this->load->view("atc/create_simulation_form");
         $this->load->view("atc/radar_page");
     }
-    public function get_plane_data() {
-        $plane = $this->atc_m->f_plane_data();
+
+    public function get_planes_data($plane_callsign=null) {
+        $plane = $this->atc_m->f_planes_data($plane_callsign);
+         echo json_encode($plane);
+    }
+
+    public function put_plane_data($plane_callsign=null) {
+        echo "flight callsign";
+        echo $plane_callsign;
+        $this->atc_m->w_plane_data($plane_callsign);
+        echo json_encode($this->input->post());
+    }
+
+    public function get_command_data($command=null) {
+        $result = $this->atc_m->r_command_data($command);
+        echo json_encode($result);
     }
 }

@@ -16,60 +16,166 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <style>
         .radar {
-            width: 100%;
-            height: 100%;
+            width: 1000px;
+            height: 700px;
+            /*margin: 0 auto;*/
             background-color: black;
         }
         .command-bar {
             padding: 15px;
         }
+        .plane-attr{
+            color: white;
+            z-index: 2;
+        }
+        .plane {
+            background-image: url('http://www.atc-sim.com/images/blip.gif');
+            width: 50px; height: 50px;
+            background-repeat: repeat;
+        }
     </style>
 </head>
 <body>
 <div class="radar">
-    <div class="plane" style="position: absolute;">
-        <img src="http://www.atc-sim.com/images/blip.gif" alt="">
-    </div>
+    
 </div>
 <div class="command-bar">
-    test
+    <input type="text" name="command_bar" id="command-bar">
+    <button onclick="generate_command($('#command-bar').val())">broadcast</button>
 </div>
 </body>
 </html>
 <script>
+    interval=1000;
     $(document).ready(function(){
-        interval = 1000;
-        plane = $(".plane");
-        getdata();
+        plane=$(".plane");
+        //getdata();
     });
-    function move(plane) {
-        //alert(position.left);
-        //get data
-        var div = plane;
+    function generate_command(cmd) {
+        //cmd contain id cmd param1, param2
+        var result=cmd.split(" ");
+        var next_data=[];
         $.ajax({
-            type:"POST",
-            url: "http://localhost/projects/index.php/atc/get_plane_data",
-            datatype: "json",
-            success:function(res){
-                console.log(res);
+            url:"get_command_data/"+result[1],
+            datatype:"json",
+            success:function(res_cmd){
+                console.log(res_cmd);
+                if(res_cmd!=null && res_cmd.length > 0) {
+                    res_cmd = JSON.parse(res_cmd);
+                    next_operation = {flight_callsign:result[0], command_param:res_cmd.command_param, change_spd:res_cmd.change_spd, 
+                        command_target:result[2]};
+                    //update target in plane data
+                    $.ajax({
+                        type:'post',
+                        datatype:'json',
+                        url:'put_plane_data/'+result[0],
+                        data:next_operation,
+                        success:function(res_plane){
+                            console.log(res_plane);
+                        }
+                    });
+                } else {
+                    alert('invalid command');
+                }
+                // console.log(next_operation);
+                // generate_data(next_operation);
+                return next_operation;
             },
             error:function(){
-                console.log("error");
+                console.log('error to generate command');
             }
         });
-        //calculate data
-        var spd_x = 2;  
-        var spd_y = 2;
-        var position = plane.position();
-        var pos_x = position.left;
-        var pos_y = position.top;
+    }
 
-        plane.css({ left : pos_x + spd_x});
-        plane.css({ top : pos_y + spd_y});
+    function add() {
+        new_plane={
+
+        }
+        $.ajax({
+            url:"add_plane",
+            datatype:json,
+            data:new_plane,
+            error:function(){
+                console.log("error to add plane");
+            }
+        });
     }
-    function getdata() {
-        setTimeout(function(){
-            move(plane);
-        }, interval);
+
+    function del(flight_callsign) {
+        $.ajax({
+            url:"del_plane/"+flight_callsign,
+            error:function(){
+                console.log("error to delete plane");
+            }
+        });
     }
+
+    function move(planes) {
+        //put to database
+        $.each(planes,function(i,plane){
+            var pxps = (((parseFloat(plane.speed)*1.852)*(10/8))/3600);
+            new_data = {
+                //calculate plane data
+                callsign:plane.flight_callsign,
+                pxps_x:pxps*Math.cos(parseInt(plane.heading))*(Math.PI/180),
+                pxps_y:pxps*Math.sin(parseInt(plane.heading))*(Math.PI/180),
+                alt:(parseFloat(plane.altitude) + 
+                    ((parseFloat(plane.altitude)==parseFloat(plane.target_alt))?
+                        0:parseFloat(plane.vertical_spd))),
+                hdg:(parseInt(plane.heading) + 
+                    ((parseFloat(plane.heading)==parseFloat(plane.target_hdg))?
+                        0:parseFloat(plane.turn_spd))),
+                x:(parseFloat(plane.x) + parseFloat(plane.pxps_x)),
+                y:(parseFloat(plane.y) - parseFloat(plane.pxps_y))
+            }
+            console.log(new_data);
+            console.log('sin : '+Math.sin(parseInt(plane.heading)*(Math.PI/180)));
+            console.log('cos : '+Math.cos(parseInt(plane.heading)*(Math.PI/180)));
+            $.ajax({
+                type:"POST",
+                url:"put_plane_data/"+plane.flight_callsign,
+                datatype:"json",
+                data:new_data,
+                success:function(res){
+                    console.log(res);
+                },
+                error:function(){
+                    console.log("error to put plane data");
+                }
+            });
+        });
+    }
+
+    function frame() {
+        now_command = $('#command-bar').val();
+        past_command = "";
+        $('.radar').html("");
+        //get from database
+        $.ajax({
+            url:"get_planes_data",
+            datatype:"json",
+            success:function(res){
+                //generate animation
+                var res = JSON.parse(res);
+                $.each(res, function(i,plane){
+                    var obj="<div class='plane-attr' style='position:absolute;left:"+plane.x+"px;top:"+(plane.y-10)+"px'>"+
+                                "<span class='id'><b>"+plane.flight_callsign+"</b></span> "+
+                                "<span class='spd'><small>spd:"+plane.speed+"</small></span> "+
+                                "<span class='hdg'><small>hdg:"+plane.heading+"</small></span> "+
+                                "<span class='alt'><small>alt:"+plane.altitude+"</small></span> "+
+                            "</div>"+
+                            "<div class='plane' style='position:absolute;left:"+plane.x+"px;top:"+plane.y+"px;'>";
+                    $('.radar').append(obj);
+                });
+                //generate next move
+                move(res);
+            },
+            error:function(){
+                console.log("error to get plane data");
+            }
+        });
+    }
+    frame();
+    // setInterval(frame, interval);
+    
 </script>
