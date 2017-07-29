@@ -43,13 +43,28 @@ class ATC_m extends CI_Model {
         print_r($data);
     	$this->db->where("flight_callsign", $plane_callsign);
     	$this->db->update('plane', $data);
-        echo '<pre>';
-        echo $this->db->last_query();
-        echo '</pre>';
     }
 
     function r_command_data($command=null) {
     	$this->db->where('command_callsign', $command);
     	return $this->db->get('command')->row_array();
+    }
+
+    function f_collision_data(){
+        //get collission plane
+        $this->db->select('COUNT(*) as count,x, y');
+        $this->db->group_by('altitude, x, y');
+        $data = $this->db->get('plane')->result_array();
+        echo $this->db->last_query();
+        echo "<pre>";
+        print_r($data);
+        die();
+        //check is there collision
+        if(count($data) > 0) {
+            $this->db->group_by('altitude');
+            $this->db->delete('plane');
+        } else {
+            return -1;
+        }
     }
 }

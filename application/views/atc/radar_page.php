@@ -30,8 +30,8 @@
         }
         .plane {
             background-image: url('http://www.atc-sim.com/images/blip.gif');
-            width: 50px; height: 50px;
-            background-repeat: repeat;
+            width: 10px; height: 10px;
+            background-position: -20px -30px;
         }
     </style>
 </head>
@@ -117,8 +117,8 @@
             new_data = {
                 //calculate plane data
                 callsign:plane.flight_callsign,
-                pxps_x:pxps*Math.cos(parseInt(plane.heading))*(Math.PI/180),
-                pxps_y:pxps*Math.sin(parseInt(plane.heading))*(Math.PI/180),
+                pxps_x:pxps*(Math.cos(parseInt(plane.heading)*(Math.PI/180))),
+                pxps_y:pxps*(Math.sin(parseInt(plane.heading)*(Math.PI/180))),
                 alt:(parseFloat(plane.altitude) + 
                     ((parseFloat(plane.altitude)==parseFloat(plane.target_alt))?
                         0:parseFloat(plane.vertical_spd))),
@@ -128,7 +128,11 @@
                 x:(parseFloat(plane.x) + parseFloat(plane.pxps_x)),
                 y:(parseFloat(plane.y) - parseFloat(plane.pxps_y))
             }
+            new_data.hdg = (new_data.hdg < 0) ? 360 : new_data.hdg;
+            new_data.hdg = (new_data.hdg > 360) ? 0 : new_data.hdg;
+
             console.log(new_data);
+            console.log('turning : '+!(parseFloat(plane.heading)==parseFloat(plane.target_hdg)));
             console.log('sin : '+Math.sin(parseInt(plane.heading)*(Math.PI/180)));
             console.log('cos : '+Math.cos(parseInt(plane.heading)*(Math.PI/180)));
             $.ajax({
@@ -158,7 +162,7 @@
                 //generate animation
                 var res = JSON.parse(res);
                 $.each(res, function(i,plane){
-                    var obj="<div class='plane-attr' style='position:absolute;left:"+plane.x+"px;top:"+(plane.y-10)+"px'>"+
+                    var obj="<div class='plane-attr' style='position:absolute;width:200px;left:"+plane.x+"px;top:"+(plane.y-30)+"px'>"+
                                 "<span class='id'><b>"+plane.flight_callsign+"</b></span> "+
                                 "<span class='spd'><small>spd:"+plane.speed+"</small></span> "+
                                 "<span class='hdg'><small>hdg:"+plane.heading+"</small></span> "+

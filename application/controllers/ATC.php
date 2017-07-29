@@ -36,4 +36,9 @@ class ATC extends CI_Controller {
         $result = $this->atc_m->r_command_data($command);
         echo json_encode($result);
     }
+
+    public function check_now_collision() {
+        $result = $this->atc_m->f_collision_data();
+        return json_encode($result);
+    }
 }
